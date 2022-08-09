@@ -1,0 +1,4 @@
+boto3
+botocore
+typing
+aws_lambda_powertools
