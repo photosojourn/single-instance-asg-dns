@@ -1,17 +1,10 @@
-# AWS Lambda Python Template
+# Single Instance ASG DNS
 
-This repo provides a opinunated "best practice" template for AWS Lambda functions using
-the Python language.
+This lambda function is designed to handle the updating of a DNS record for an ASG which contains only a single instance
+i.e Bastion or Instance which is part of a partioned cluster.
 
-## Features
+## Repo
 
-### Python
-* Inclusion of [Lambda Powertools Python](https://awslabs.github.io/aws-lambda-powertools-python/latest/)
-* Logging already configured
-* Tracing using AWS XRay configured and enabled via envrioment variable `ENABLE_XRAY` (True or False, default False)
-* Python Typing for ease of readability
-
-### Repo
 * Precommit Hooks for the following:
   * flake8 - Python linting
   * Black - Python file formatting
