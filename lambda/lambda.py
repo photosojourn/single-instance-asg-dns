@@ -23,6 +23,7 @@ r53 = boto3.client("route53")
 
 def fetch_asg_desired_state(asg_name) -> int:
     asg = autoscaling.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_name])
+    print(asg)
 
     return asg["AutoScalingGroups"][0]["DesiredCapacity"]
 
@@ -63,8 +64,13 @@ def fetch_asg_dns(asg_name: str) -> str:
     """
     asg = autoscaling.describe_auto_scaling_groups(AutoScalingGroupNames=[asg_name])
 
-    tags = asg["AutoScalingGroups"]["Tags"]
-    return next(item for item in tags if item["Key"] == "asg_dns").get("Value")
+    tags = asg["AutoScalingGroups"][0]["Tags"]
+
+    try:
+        return next(item for item in tags if item["Key"] == "asg_dns").get("Value")
+    except StopIteration:
+        logger.info("asg_dns Tag missing. Returning NULL")
+        return None
 
 
 def update_dns(ip_addr: str, asg: str):
@@ -77,37 +83,40 @@ def update_dns(ip_addr: str, asg: str):
     asg: Name of the ASG
     """
     dns = fetch_asg_dns(asg)
-    hosted_zones = r53.list_hosted_zones_by_name(
-        DNSName=".".join(urlparse(dns).path.split(".")[1:])
-    )
+    if dns is not None:
+        logger.info("asg_dns Tag found. Updating DNS")
+        hosted_zones = r53.list_hosted_zones_by_name(
+            DNSName=".".join(urlparse(dns).path.split(".")[1:])
+        )
+        zone_id = hosted_zones["HostedZones"][0]["Id"].split("/")[2]
 
-    zone_id = hosted_zones["HostedZones"][0]["Id"].split("/")[1]
-
-    r53.change_resource_record_sets(
-        HostedZoneId=zone_id,
-        ChangeBatch={
-            "Changes": [
-                {
-                    "Action": "UPSERT",
-                    "ResourceRecordSet": {
-                        "Name": dns,
-                        "Type": "A",
-                        "TTL": 300,
-                        "ResourceRecords": [
-                            {
-                                "Value": ip_addr,
-                            }
-                        ],
-                    },
-                }
-            ]
-        },
-    )
+        r53.change_resource_record_sets(
+            HostedZoneId=zone_id,
+            ChangeBatch={
+                "Changes": [
+                    {
+                        "Action": "UPSERT",
+                        "ResourceRecordSet": {
+                            "Name": dns,
+                            "Type": "A",
+                            "TTL": 300,
+                            "ResourceRecords": [
+                                {
+                                    "Value": ip_addr,
+                                }
+                            ],
+                        },
+                    }
+                ]
+            },
+        )
+    else:
+        logger.info("ASG Does not contain asg_dns Tag so skipping")
 
 
 @logger.inject_lambda_context
-@tracer.capture_lambda_handler
 @event_source(data_class=EventBridgeEvent)
+@tracer.capture_lambda_handler
 def lambda_handler(event: EventBridgeEvent, context: LambdaContext) -> Dict[str, Any]:
     """
     Main Lambda entry point.
@@ -124,7 +133,7 @@ def lambda_handler(event: EventBridgeEvent, context: LambdaContext) -> Dict[str,
         logger.error("ASG has a desired count greater than 1. Aborting.")
         return {"statusCode": 500}
 
-    if event.detail["LifecycleTransition"] == "autoscaling:EC2_INSTANCE_LAUNCHING":
+    if event["detail-type"] == "EC2 Instance Launch Successful":
         ip_address = fetch_ip_from_ec2(event.detail["EC2InstanceId"])
         update_dns(ip_address, event.detail["AutoScalingGroupName"])
 
