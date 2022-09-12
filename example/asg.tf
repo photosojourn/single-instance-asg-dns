@@ -34,4 +34,8 @@ module "asg" {
   tags = {
     asg_dns = var.asg_dns
   }
+
+  depends_on = [
+    module.asg_dns
+  ]
 }
