@@ -8,5 +8,36 @@ automated failure recovery, but with the side effect of the IP address changing.
 In order for the Lambda function to update DNS a tag must be added to each ASG. This tag is called `asg_dns` and is the fully quailifed domain name you want the ASG instance to create/update.
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Requirements
 
+No requirements.
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_lambda_function_from_package"></a> [lambda\_function\_from\_package](#module\_lambda\_function\_from\_package) | terraform-aws-modules/lambda/aws | v4.0.1 |
+| <a name="module_package_dir"></a> [package\_dir](#module\_package\_dir) | terraform-aws-modules/lambda/aws | v4.0.1 |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_cloudwatch_event_rule.ec2_instance_start](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.ec2_instance_start](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_iam_policy.lambda_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role_policy_attachment.lambda_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_lambda_permission.allow_cloudwatch_run_lamdba_backup](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_iam_policy_document.lambda_permissions](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_route53_hosted_zone_arns"></a> [route53\_hosted\_zone\_arns](#input\_route53\_hosted\_zone\_arns) | List of Hosted Zone ARNs which the Lambda can use | `list(string)` | `[]` | no |
+
+## Outputs
+
+No outputs.
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
