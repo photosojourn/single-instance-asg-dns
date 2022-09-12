@@ -7,6 +7,10 @@ automated failure recovery, but with the side effect of the IP address changing.
 
 In order for the Lambda function to update DNS a tag must be added to each ASG. This tag is called `asg_dns` and is the fully quailifed domain name you want the ASG instance to create/update.
 
+## Know Issues
+
+While a `depends_on` statement can be used to control the deployment of the Lambda function prior to the ASG (see example), there is a still a chance that the ASG will launch the first instance before the Lambda function has been provisioned for the first time. This situation means that the DNS record may not always be created as part of the inital `terraform apply`. This is out of our control so the best resolution is to simply terminate the first instance and allow the ASG to launch a fresh one. This will result in the DNS entry being created as everything is now in place.
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
